@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="640" height="480" viewBox="0 0 640 480">
+  <rect width="640" height="480" fill="#4d7c0f"/>
+  <circle cx="320" cy="200" r="120" fill="rgba(255,255,255,0.12)"/>
+  <rect x="180" y="90" width="280" height="220" fill="none" stroke="#facc15" stroke-width="5"/>
+  <rect x="180" y="60" width="200" height="30" fill="#facc15"/>
+  <text x="190" y="82" font-family="sans-serif" font-size="18" font-weight="bold" fill="#111">Rumput Teki</text>
+</svg>
