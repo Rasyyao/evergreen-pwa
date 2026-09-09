@@ -93,17 +93,19 @@ export function CameraScannerProvider({ children }: { children: React.ReactNode 
     }
   };
 
-  // Auto start camera when opened or facingMode flipped
+  // When facingMode is flipped while camera is open, restart camera
   useEffect(() => {
-    if (isOpen) {
+    // Only restart for facingMode changes when already open (not initial mount)
+    if (isOpen && stream) {
       startCamera(facingMode);
-    } else {
-      stopCamera();
     }
     return () => {
-      stopCamera();
+      if (!isOpen) {
+        stopCamera();
+      }
     };
-  }, [isOpen, facingMode]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [facingMode]);
 
   // Flip camera between front & back
   const toggleCameraFacing = () => {
@@ -164,7 +166,7 @@ export function CameraScannerProvider({ children }: { children: React.ReactNode 
 
       {/* Full-Screen Native-Styled Camera Interface */}
       {isOpen && (
-        <div className="fixed inset-0 z-[9999] flex flex-col bg-black text-white select-none animate-in fade-in duration-200 overflow-hidden touch-none overscroll-none">
+        <div className="fixed inset-0 z-[9999] flex flex-col bg-black text-white select-none animate-in fade-in duration-200 overflow-hidden overscroll-none" style={{ touchAction: "manipulation" }}>
           {/* Shutter Flash Animation overlay */}
           {isCapturing && (
             <div className="absolute inset-0 z-50 bg-white animate-shutter-flash pointer-events-none" />
@@ -218,6 +220,8 @@ export function CameraScannerProvider({ children }: { children: React.ReactNode 
                 autoPlay
                 playsInline
                 muted
+                /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
+                {...({ "webkit-playsinline": "" } as any)}
                 className="absolute inset-0 h-full w-full object-cover"
               />
             ) : (

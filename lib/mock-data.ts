@@ -189,14 +189,6 @@ export function getHomeData(): HomeData {
   return homeData;
 }
 
-export function getAnalisisList(): AnalisisEntry[] {
-  return [...analisisList].sort((a, b) => (a.datetime < b.datetime ? 1 : -1));
-}
-
-export function getAnalisisDetail(id: string): AnalisisEntry | undefined {
-  return analisisList.find((entry) => entry.id === id);
-}
-
 export function getRandomAnalisisId(): string {
   return analisisList[Math.floor(Math.random() * analisisList.length)].id;
 }

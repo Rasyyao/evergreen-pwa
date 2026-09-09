@@ -1,9 +1,15 @@
 "use client";
 
-import React, { useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { getRandomAnalisisId } from "@/lib/mock-data";
 import { FarmoraLogoIcon, GalleryIcon } from "@/components/icons";
+import {
+  DETECTION_STORAGE_KEY,
+  blobToDataUrl,
+  captureVideoFrame,
+  detectImage,
+  type StoredDetection,
+} from "@/lib/detection";
 
 export default function DeteksiPage() {
   const router = useRouter();
@@ -14,80 +20,177 @@ export default function DeteksiPage() {
   const [isCapturing, setIsCapturing] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [processingStep, setProcessingStep] = useState("Memindai citra daun...");
+  const [processingError, setProcessingError] = useState<string | null>(null);
+  const [cameraStarted, setCameraStarted] = useState(false);
+  const [isSwitching, setIsSwitching] = useState(false);
+
+  // Debug state for mobile troubleshooting
+  const [debugInfo, setDebugInfo] = useState<{
+    isSecureContext: boolean | null;
+    hasMediaDevices: boolean | null;
+    hasGetUserMedia: boolean | null;
+    userAgent: string;
+    protocol: string;
+    lastError: string | null;
+  }>({
+    isSecureContext: null,
+    hasMediaDevices: null,
+    hasGetUserMedia: null,
+    userAgent: "",
+    protocol: "",
+    lastError: null,
+  });
 
   const videoRef = useRef<HTMLVideoElement>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const galleryInputRef = useRef<HTMLInputElement>(null);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
 
-  // Resilient multi-tier camera launcher
-  const startCamera = async (facing: "environment" | "user") => {
-    stopCamera();
+  // Populate debug info on mount
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      setDebugInfo({
+        isSecureContext: window.isSecureContext,
+        hasMediaDevices: !!navigator.mediaDevices,
+        hasGetUserMedia: !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia),
+        userAgent: navigator.userAgent.slice(0, 120),
+        protocol: window.location.protocol,
+        lastError: null,
+      });
+    }
+  }, []);
+
+  // Camera start - ONLY called from direct user gesture (tap/click)
+  const startCamera = useCallback(async (facing: "environment" | "user", switching = false) => {
+    if (switching) setIsSwitching(true);
+    // Stop any existing stream first
+    setStream((prev) => {
+      if (prev) {
+        prev.getTracks().forEach((track) => track.stop());
+      }
+      return null;
+    });
     setCameraError(null);
 
-    if (typeof navigator === "undefined" || !navigator.mediaDevices?.getUserMedia) {
-      setCameraError("Kamera tidak didukung di peramban ini.");
+    // Check prerequisites
+    if (typeof navigator === "undefined") {
+      const msg = "Navigator API tidak tersedia.";
+      setCameraError(msg);
+      setDebugInfo((prev) => ({ ...prev, lastError: msg }));
       return;
     }
 
-    try {
-      // Tier 1: Ideal back camera with resolution
-      const mediaStream = await navigator.mediaDevices.getUserMedia({
-        video: {
-          facingMode: { ideal: facing },
-          width: { ideal: 1280 },
-          height: { ideal: 720 },
-        },
+    if (!navigator.mediaDevices) {
+      const msg = window.isSecureContext
+        ? "navigator.mediaDevices tidak tersedia. Coba refresh halaman."
+        : "Kamera memerlukan HTTPS. Buka via link HTTPS ngrok, bukan HTTP.";
+      setCameraError(msg);
+      setDebugInfo((prev) => ({ ...prev, lastError: msg }));
+      return;
+    }
+
+    if (!navigator.mediaDevices.getUserMedia) {
+      const msg = "getUserMedia tidak didukung di browser ini.";
+      setCameraError(msg);
+      setDebugInfo((prev) => ({ ...prev, lastError: msg }));
+      return;
+    }
+
+    // Try multiple constraint tiers
+    const tiers = [
+      // Tier 1: Ideal with resolution
+      {
+        video: { facingMode: { ideal: facing }, width: { ideal: 1280 }, height: { ideal: 720 } },
         audio: false,
-      });
-      setStream(mediaStream);
-    } catch (err1) {
-      console.warn("Tier 1 failed, trying Tier 2 fallback:", err1);
+      },
+      // Tier 2: Simple facingMode
+      { video: { facingMode: facing }, audio: false },
+      // Tier 3: Just video
+      { video: true, audio: false },
+    ];
+
+    for (let i = 0; i < tiers.length; i++) {
       try {
-        // Tier 2: Simple facingMode
-        const fallbackStream = await navigator.mediaDevices.getUserMedia({
-          video: { facingMode: facing },
-          audio: false,
-        });
-        setStream(fallbackStream);
-      } catch (err2) {
-        console.warn("Tier 2 failed, trying Tier 3 generic video:", err2);
-        try {
-          // Tier 3: Generic video stream
-          const genericStream = await navigator.mediaDevices.getUserMedia({
-            video: true,
-            audio: false,
-          });
-          setStream(genericStream);
-        } catch (finalErr) {
-          console.error("All camera tiers failed:", finalErr);
-          setCameraError("Ketuk tombol di bawah untuk memberi izin kamera.");
+        const mediaStream = await navigator.mediaDevices.getUserMedia(
+          tiers[i] as MediaStreamConstraints
+        );
+        setStream(mediaStream);
+        setCameraStarted(true);
+        setIsSwitching(false);
+        setDebugInfo((prev) => ({ ...prev, lastError: null }));
+        return; // Success!
+      } catch (err: unknown) {
+        const error = err as DOMException;
+        console.warn(`Camera tier ${i + 1} failed:`, error.name, error.message);
+
+        if (i === tiers.length - 1) {
+          // All tiers failed
+          let userMsg: string;
+          if (error.name === "NotAllowedError") {
+            userMsg =
+              "Izin kamera ditolak. Buka Settings > Safari > Camera dan izinkan untuk situs ini. Lalu refresh.";
+          } else if (error.name === "NotFoundError") {
+            userMsg = "Tidak ada kamera ditemukan pada perangkat ini.";
+          } else if (error.name === "NotReadableError" || error.name === "AbortError") {
+            userMsg = "Kamera sedang digunakan aplikasi lain. Tutup app lain lalu coba lagi.";
+          } else if (error.name === "OverconstrainedError") {
+            userMsg = "Resolusi kamera tidak didukung, coba lagi.";
+          } else {
+            userMsg = `Gagal mengakses kamera: ${error.name} - ${error.message}`;
+          }
+          setCameraError(userMsg);
+          setIsSwitching(false);
+          setDebugInfo((prev) => ({
+            ...prev,
+            lastError: `${error.name}: ${error.message}`,
+          }));
         }
       }
     }
-  };
+  }, []);
 
-  const stopCamera = () => {
-    if (stream) {
-      stream.getTracks().forEach((track) => track.stop());
-      setStream(null);
-    }
-  };
+  const stopCamera = useCallback(() => {
+    setStream((prev) => {
+      if (prev) {
+        prev.getTracks().forEach((track) => track.stop());
+      }
+      return null;
+    });
+  }, []);
 
   // Bind media stream to video element
   useEffect(() => {
-    if (videoRef.current && stream) {
-      videoRef.current.srcObject = stream;
-      videoRef.current.play().catch((err) => {
-        console.warn("Video play interrupted:", err);
-      });
+    const video = videoRef.current;
+    if (video && stream) {
+      video.srcObject = stream;
+      // Use a small delay for iOS Safari to properly bind srcObject
+      const timer = setTimeout(() => {
+        video.play().catch((err) => {
+          console.warn("Video play interrupted:", err);
+        });
+      }, 100);
+      return () => clearTimeout(timer);
     }
   }, [stream]);
 
-  // Try starting camera automatically on mount
+  // Cleanup on unmount only
   useEffect(() => {
-    startCamera(facingMode);
     return () => {
-      stopCamera();
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+      setStream((prev) => {
+        if (prev) {
+          prev.getTracks().forEach((track) => track.stop());
+        }
+        return null;
+      });
     };
+  }, []);
+
+  // When facingMode changes and camera was already started, restart
+  useEffect(() => {
+    if (cameraStarted) {
+      startCamera(facingMode, true);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [facingMode]);
 
   const toggleCameraFacing = () => {
@@ -95,40 +198,64 @@ export default function DeteksiPage() {
   };
 
   const handleCapture = () => {
-    if (!stream) {
-      startCamera(facingMode);
-      return;
+    if (stream && videoRef.current) {
+      setIsCapturing(true);
+      setTimeout(async () => {
+        setIsCapturing(false);
+        try {
+          const blob = await captureVideoFrame(videoRef.current!);
+          await startAnalysis(blob);
+        } catch (err) {
+          setProcessingError(err instanceof Error ? err.message : "Gagal mengambil gambar.");
+          setIsProcessing(true);
+        }
+      }, 300);
+    } else {
+      // If live WebRTC stream is unavailable, seamlessly open native camera
+      cameraInputRef.current?.click();
     }
-    setIsCapturing(true);
-    setTimeout(() => {
-      setIsCapturing(false);
-      startAnalysis();
-    }, 300);
   };
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files.length > 0) {
-      startAnalysis();
+    const file = e.target.files?.[0];
+    if (file) {
+      startAnalysis(file);
     }
     e.target.value = "";
   };
 
-  const startAnalysis = () => {
+  const startAnalysis = async (image: Blob) => {
     setIsProcessing(true);
+    setProcessingError(null);
+    setProcessingStep("Mengirim gambar ke server AI...");
 
-    setTimeout(() => {
-      setProcessingStep("Ekstraksi fitur morfologi...");
-    }, 600);
+    try {
+      const [result, imageDataUrl] = await Promise.all([
+        detectImage(image),
+        blobToDataUrl(image),
+      ]);
 
-    setTimeout(() => {
       setProcessingStep("Mencocokkan basis data Gulma & Hama...");
-    }, 1200);
 
-    setTimeout(() => {
-      const targetId = getRandomAnalisisId();
+      const stored: StoredDetection = {
+        result,
+        imageDataUrl,
+        timestamp: new Date().toISOString(),
+      };
+      sessionStorage.setItem(DETECTION_STORAGE_KEY, JSON.stringify(stored));
+
       stopCamera();
-      router.push(`/analisis/${targetId}`);
-    }, 1800);
+      router.push("/analisis/hasil");
+    } catch (err) {
+      setProcessingError(
+        err instanceof Error ? err.message : "Deteksi gagal. Coba lagi."
+      );
+    }
+  };
+
+  const handleRetry = () => {
+    setIsProcessing(false);
+    setProcessingError(null);
   };
 
   const handleClose = () => {
@@ -140,13 +267,28 @@ export default function DeteksiPage() {
     }
   };
 
+  // Handle "Mulai Kamera" button - MUST be from direct user gesture for iOS Safari
+  const handleStartCamera = () => {
+    startCamera(facingMode);
+  };
+
   return (
-    <div className="fixed inset-0 md:relative z-50 w-full h-[100dvh] flex flex-col bg-black text-white select-none overflow-hidden touch-none overscroll-none">
+    <div className="fixed inset-0 md:relative z-50 w-full h-[100dvh] flex flex-col bg-black text-white select-none overflow-hidden overscroll-none" style={{ touchAction: "manipulation" }}>
       {/* Hidden File Input for Gallery Picker */}
       <input
-        ref={fileInputRef}
+        ref={galleryInputRef}
         type="file"
         accept="image/*"
+        className="hidden"
+        onChange={handleFileUpload}
+      />
+
+      {/* Hidden File Input for Direct Native Phone Camera */}
+      <input
+        ref={cameraInputRef}
+        type="file"
+        accept="image/*"
+        capture="environment"
         className="hidden"
         onChange={handleFileUpload}
       />
@@ -204,10 +346,24 @@ export default function DeteksiPage() {
             autoPlay
             playsInline
             muted
+            /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
+            {...({ "webkit-playsinline": "" } as any)}
             className="absolute inset-0 h-full w-full object-cover"
           />
+        ) : isSwitching ? (
+          /* Loading state while switching cameras */
+          <div className="absolute inset-0 bg-zinc-950 flex flex-col items-center justify-center">
+            <div className="relative flex h-16 w-16 items-center justify-center mb-3">
+              <span className="absolute inset-0 rounded-full border-[3px] border-emerald-500/20" />
+              <span className="absolute inset-0 rounded-full border-[3px] border-emerald-400 border-t-transparent animate-spin" />
+              <svg className="h-7 w-7 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+              </svg>
+            </div>
+            <p className="text-sm font-semibold text-zinc-200">Mengganti kamera...</p>
+          </div>
         ) : (
-          /* Viewfinder fallback with explicit trigger button */
+          /* Viewfinder fallback — user MUST tap to start camera (iOS Safari requirement) */
           <div className="absolute inset-0 bg-gradient-to-b from-zinc-900 via-zinc-950 to-zinc-900 flex flex-col items-center justify-center p-6 text-center">
             {/* Background grid pattern */}
             <div
@@ -218,26 +374,63 @@ export default function DeteksiPage() {
                 backgroundSize: "24px 24px",
               }}
             />
-            <div className="relative z-10 flex flex-col items-center gap-3 max-w-[280px]">
-              <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-400">
+            <div className="relative z-10 flex flex-col items-center gap-3 max-w-[290px]">
+              <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 shadow-lg shadow-emerald-500/20">
                 <svg className="h-8 w-8 animate-pulse" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
                   <circle cx="12" cy="13" r="3" strokeWidth={1.8} />
                 </svg>
               </div>
+
               <p className="text-sm font-semibold text-zinc-100">
-                {cameraError ? cameraError : "Memulai kamera perangkat..."}
+                {cameraError
+                  ? cameraError
+                  : "Ketuk tombol di bawah untuk mengaktifkan kamera"}
               </p>
-              <p className="text-[11px] text-zinc-400">
+
+              <p className="text-[11px] text-zinc-400 leading-relaxed">
                 Arahkan ke daun tanaman, hama, atau gulma untuk memindai otomatis.
               </p>
-              <button
-                type="button"
-                onClick={() => startCamera(facingMode)}
-                className="mt-1 px-5 py-2.5 rounded-full bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white text-xs font-bold tracking-wide shadow-lg shadow-emerald-600/40 transition-all cursor-pointer"
-              >
-                Beri Izin Kamera
-              </button>
+
+              <div className="flex flex-col gap-2 w-full mt-1">
+                {/* Button 1: Request Browser Camera Permission — direct user gesture */}
+                <button
+                  type="button"
+                  onClick={handleStartCamera}
+                  className="w-full py-3 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white text-sm font-bold tracking-wide shadow-lg shadow-emerald-600/30 transition cursor-pointer"
+                >
+                  📷 Mulai Kamera
+                </button>
+
+                {/* Button 2: Direct Native Phone Camera (100% Guaranteed on Mobile) */}
+                <button
+                  type="button"
+                  onClick={() => cameraInputRef.current?.click()}
+                  className="w-full py-2.5 px-4 rounded-xl bg-zinc-800 hover:bg-zinc-700 active:scale-95 text-zinc-200 border border-zinc-700 text-xs font-medium transition cursor-pointer flex items-center justify-center gap-1.5"
+                >
+                  <CameraIcon className="h-4 w-4 text-emerald-400" />
+                  <span>Buka Kamera Bawaan HP</span>
+                </button>
+              </div>
+
+              {/* Debug Info Panel — helps diagnose mobile issues */}
+              {(cameraError || debugInfo.lastError) && (
+                <details className="w-full mt-2 text-left">
+                  <summary className="text-[10px] text-zinc-500 cursor-pointer hover:text-zinc-300 transition">
+                    🔍 Info Debug Kamera
+                  </summary>
+                  <div className="mt-1 p-2 rounded-lg bg-zinc-900/80 border border-zinc-700/50 text-[10px] text-zinc-400 space-y-0.5 font-mono">
+                    <p>Secure: <span className={debugInfo.isSecureContext ? "text-emerald-400" : "text-red-400"}>{String(debugInfo.isSecureContext)}</span></p>
+                    <p>Protocol: {debugInfo.protocol}</p>
+                    <p>MediaDevices: <span className={debugInfo.hasMediaDevices ? "text-emerald-400" : "text-red-400"}>{String(debugInfo.hasMediaDevices)}</span></p>
+                    <p>getUserMedia: <span className={debugInfo.hasGetUserMedia ? "text-emerald-400" : "text-red-400"}>{String(debugInfo.hasGetUserMedia)}</span></p>
+                    {debugInfo.lastError && (
+                      <p className="text-red-400 break-all">Error: {debugInfo.lastError}</p>
+                    )}
+                    <p className="break-all text-zinc-500">{debugInfo.userAgent}</p>
+                  </div>
+                </details>
+              )}
             </div>
           </div>
         )}
@@ -266,18 +459,39 @@ export default function DeteksiPage() {
         {/* Analysis State Modal Overlay */}
         {isProcessing && (
           <div className="absolute inset-0 z-40 flex flex-col items-center justify-center bg-black/85 backdrop-blur-md px-6 text-center animate-in fade-in duration-200">
-            <div className="relative flex h-20 w-20 items-center justify-center mb-4">
-              <span className="absolute inset-0 rounded-full border-4 border-emerald-500/20" />
-              <span className="absolute inset-0 rounded-full border-4 border-emerald-400 border-t-transparent animate-spin" />
-              <span className="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-500/25 text-emerald-400">
-                <FarmoraLogoIcon className="h-5 w-5 text-emerald-400" />
-              </span>
-            </div>
-            <h3 className="text-lg font-bold text-white mb-1">Menganalisis Spesies</h3>
-            <p className="text-xs text-emerald-400 font-mono tracking-wide">{processingStep}</p>
-            <div className="w-48 h-1.5 bg-zinc-800 rounded-full mt-4 overflow-hidden">
-              <div className="h-full bg-emerald-400 rounded-full animate-pulse w-3/4 transition-all duration-500" />
-            </div>
+            {processingError ? (
+              <>
+                <div className="flex h-16 w-16 items-center justify-center rounded-full bg-rose-500/15 border border-rose-500/40 text-rose-400 mb-4">
+                  <svg className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M12 9v3.75m0 3.75h.007M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+                <h3 className="text-lg font-bold text-white mb-1">Deteksi Gagal</h3>
+                <p className="text-xs text-zinc-300 max-w-[260px]">{processingError}</p>
+                <button
+                  type="button"
+                  onClick={handleRetry}
+                  className="mt-5 px-6 py-2.5 rounded-full bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white text-xs font-bold tracking-wide shadow-lg shadow-emerald-600/30 transition cursor-pointer"
+                >
+                  Coba Lagi
+                </button>
+              </>
+            ) : (
+              <>
+                <div className="relative flex h-20 w-20 items-center justify-center mb-4">
+                  <span className="absolute inset-0 rounded-full border-4 border-emerald-500/20" />
+                  <span className="absolute inset-0 rounded-full border-4 border-emerald-400 border-t-transparent animate-spin" />
+                  <span className="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-500/25 text-emerald-400">
+                    <FarmoraLogoIcon className="h-5 w-5 text-emerald-400" />
+                  </span>
+                </div>
+                <h3 className="text-lg font-bold text-white mb-1">Menganalisis Spesies</h3>
+                <p className="text-xs text-emerald-400 font-mono tracking-wide">{processingStep}</p>
+                <div className="w-48 h-1.5 bg-zinc-800 rounded-full mt-4 overflow-hidden">
+                  <div className="h-full bg-emerald-400 rounded-full animate-pulse w-3/4 transition-all duration-500" />
+                </div>
+              </>
+            )}
           </div>
         )}
       </div>
@@ -289,7 +503,7 @@ export default function DeteksiPage() {
           {/* Gallery Button */}
           <button
             type="button"
-            onClick={() => fileInputRef.current?.click()}
+            onClick={() => galleryInputRef.current?.click()}
             className="flex flex-col items-center gap-1 text-white/90 active:scale-90 transition cursor-pointer"
             aria-label="Upload dari galeri"
           >
@@ -299,7 +513,7 @@ export default function DeteksiPage() {
             <span className="text-[10px] font-medium text-zinc-300">Galeri</span>
           </button>
 
-          {/* Shutter Button */}
+          {/* Shutter Button: Captures live stream or opens native mobile camera */}
           <button
             type="button"
             onClick={handleCapture}
@@ -333,5 +547,19 @@ export default function DeteksiPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+function CameraIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={2}
+        d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"
+      />
+      <circle cx="12" cy="13" r="3" strokeWidth={2} />
+    </svg>
   );
 }

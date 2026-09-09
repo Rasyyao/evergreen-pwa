@@ -25,6 +25,7 @@ interface AuthContextType {
   }) => Promise<boolean>;
   logout: () => void;
   loginAsDemo: () => void;
+  updateUser: (data: Partial<User>) => void;
 }
 
 const DEFAULT_USER: User = {
@@ -103,6 +104,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     router.push("/");
   };
 
+  const updateUser = (data: Partial<User>) => {
+    setUser((prev) => {
+      if (!prev) return prev;
+      const next = { ...prev, ...data };
+      localStorage.setItem("farmora_user", JSON.stringify(next));
+      return next;
+    });
+  };
+
   const logout = () => {
     setUser(null);
     localStorage.removeItem("farmora_user");
@@ -119,6 +129,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         register,
         logout,
         loginAsDemo,
+        updateUser,
       }}
     >
       {children}

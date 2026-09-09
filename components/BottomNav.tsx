@@ -56,13 +56,6 @@ export function BottomNav() {
         {/* Center Capture Shutter FAB */}
         <Link
           href="/deteksi"
-          onClick={() => {
-            if (typeof navigator !== "undefined" && navigator.mediaDevices?.getUserMedia) {
-              navigator.mediaDevices
-                .getUserMedia({ video: { facingMode: "environment" } })
-                .catch(() => {});
-            }
-          }}
           aria-label="Buka scanner deteksi kamera"
           className="relative flex flex-1 flex-col items-center justify-center min-h-[52px] py-1 touch-manipulation cursor-pointer select-none group active:scale-95 transition-transform z-50"
         >
