@@ -2,7 +2,7 @@ type IconProps = {
   className?: string;
 };
 
-export function FarmoraLogoIcon({ className }: IconProps) {
+export function EverGreenLogoIcon({ className }: IconProps) {
   return (
     <svg viewBox="0 0 24 24" fill="none" className={className} aria-hidden="true">
       <path

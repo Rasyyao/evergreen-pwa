@@ -207,15 +207,15 @@ function AccountSettingsModal({ onClose }: { onClose: () => void }) {
 
 function FarmPreferencesModal({ onClose }: { onClose: () => void }) {
   const [autoRecommend, setAutoRecommend] = usePersistedState(
-    "farmora_pref_auto_recommend",
+    "evergreen_pref_auto_recommend",
     true
   );
   const [weatherAlert, setWeatherAlert] = usePersistedState(
-    "farmora_pref_weather_alert",
+    "evergreen_pref_weather_alert",
     true
   );
   const [irrigationMode, setIrrigationMode] = usePersistedState<"manual" | "otomatis">(
-    "farmora_pref_irrigation_mode",
+    "evergreen_pref_irrigation_mode",
     "otomatis"
   );
 
@@ -262,16 +262,16 @@ function FarmPreferencesModal({ onClose }: { onClose: () => void }) {
 }
 
 const SENSORS = [
-  { id: "FARMORA-01", zone: "Petak A", status: "Online" as const },
-  { id: "FARMORA-02", zone: "Petak B", status: "Online" as const },
-  { id: "FARMORA-03", zone: "Petak C", status: "Online" as const },
-  { id: "FARMORA-04", zone: "Petak D", status: "Offline" as const },
+  { id: "EVERGREEN-01", zone: "Petak A", status: "Online" as const },
+  { id: "EVERGREEN-02", zone: "Petak B", status: "Online" as const },
+  { id: "EVERGREEN-03", zone: "Petak C", status: "Online" as const },
+  { id: "EVERGREEN-04", zone: "Petak D", status: "Offline" as const },
 ];
 
 function NotificationSensorModal({ onClose }: { onClose: () => void }) {
-  const [pushEnabled, setPushEnabled] = usePersistedState("farmora_notif_push", true);
-  const [emailEnabled, setEmailEnabled] = usePersistedState("farmora_notif_email", false);
-  const [smsEnabled, setSmsEnabled] = usePersistedState("farmora_notif_sms", false);
+  const [pushEnabled, setPushEnabled] = usePersistedState("evergreen_notif_push", true);
+  const [emailEnabled, setEmailEnabled] = usePersistedState("evergreen_notif_email", false);
+  const [smsEnabled, setSmsEnabled] = usePersistedState("evergreen_notif_sms", false);
 
   return (
     <Modal title="Notifikasi & Sensor IoT" onClose={onClose}>
@@ -365,7 +365,7 @@ function HelpCenterModal({ onClose }: { onClose: () => void }) {
 
       <div className="mt-4 pt-3 border-t border-zinc-100 text-center">
         <p className="text-[11px] text-zinc-400">Butuh bantuan lebih lanjut?</p>
-        <p className="text-xs font-semibold text-emerald-700 mt-0.5">support@farmora.id</p>
+        <p className="text-xs font-semibold text-emerald-700 mt-0.5">support@evergreen.id</p>
       </div>
     </Modal>
   );
@@ -378,7 +378,7 @@ function AboutAppModal({ onClose }: { onClose: () => void }) {
         <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-500 to-emerald-700 text-white shadow-md shadow-emerald-600/30">
           <PlantIcon className="h-7 w-7" />
         </div>
-        <p className="text-sm font-bold text-zinc-900">FARMORA Precision Agrotech</p>
+        <p className="text-sm font-bold text-zinc-900">EVERGREEN Precision Agrotech</p>
         <p className="text-[11px] text-zinc-400">Versi 0.1.0-preview</p>
       </div>
       <p className="text-xs leading-relaxed text-zinc-500 text-center">
@@ -438,7 +438,7 @@ export default function ProfilePage() {
             Petani &middot; {user?.commodity || "Lahan Padi Sawah"}
           </p>
           <p className="text-[11px] text-zinc-500 truncate mt-0.5">
-            {user?.email || "petani@farmora.id"}
+            {user?.email || "petani@evergreen.id"}
           </p>
         </div>
       </section>
@@ -507,7 +507,7 @@ export default function ProfilePage() {
             </div>
             <h3 className="text-base font-bold text-zinc-900 mb-1">Keluar Akun?</h3>
             <p className="text-xs text-zinc-500 mb-5">
-              Anda akan dialihkan ke halaman masuk FARMORA.
+              Anda akan dialihkan ke halaman masuk EVERGREEN.
             </p>
             <div className="flex gap-2">
               <button
@@ -547,7 +547,7 @@ export default function ProfilePage() {
       {activeModal === "tentang" && <AboutAppModal onClose={() => setActiveModal(null)} />}
 
       <p className="text-center text-[11px] text-zinc-400 pt-2">
-        FARMORA Precision Agrotech &middot; v0.1.0-preview
+        EVERGREEN Precision Agrotech &middot; v0.1.0-preview
       </p>
     </div>
   );

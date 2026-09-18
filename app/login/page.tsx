@@ -4,7 +4,7 @@ import React, { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
-import { EyeIcon, EyeOffIcon, FarmoraLogoIcon } from "@/components/icons";
+import { EyeIcon, EyeOffIcon, EverGreenLogoIcon } from "@/components/icons";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -171,7 +171,7 @@ export default function LoginPage() {
           <div className="relative mb-3.5 group">
             <div className="absolute -inset-2 rounded-[26px] bg-gradient-to-tr from-[#43786b]/40 to-emerald-400/20 blur-md opacity-70 group-hover:opacity-100 transition duration-500" />
             <div className="relative flex h-[72px] w-[72px] items-center justify-center rounded-[22px] bg-gradient-to-br from-[#3d6e62] via-[#2d5a4f] to-[#1e4138] shadow-xl shadow-[#275349]/30 border border-white/25">
-              <FarmoraLogoIcon className="h-10 w-10 text-white drop-shadow-md" />
+              <EverGreenLogoIcon className="h-10 w-10 text-white drop-shadow-md" />
               {/* Glossy top-light reflection */}
               <div className="absolute inset-x-0 top-0 h-1/2 rounded-t-[21px] bg-gradient-to-b from-white/25 to-transparent pointer-events-none" />
             </div>
@@ -183,7 +183,7 @@ export default function LoginPage() {
 
           <div className="flex items-center gap-1.5">
             <h1 className="text-[24px] font-black text-[#1e4138] tracking-tight font-sans">
-              FARMORA
+              EVERGREEN
             </h1>
             <span className="inline-block px-1.5 py-0.5 rounded text-[9px] font-extrabold bg-emerald-100 text-[#275349] tracking-wider uppercase">
               PWA
@@ -237,7 +237,7 @@ export default function LoginPage() {
                   type="text"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="nama@farmora.id"
+                  placeholder="nama@evergreen.id"
                   className="w-full rounded-2xl bg-white pl-10 pr-4 py-3 text-sm text-[#1e4138] font-semibold placeholder-[#9dbbb2] border border-[#d2ded8] focus:outline-none focus:ring-2 focus:ring-[#43786b]/40 focus:border-[#43786b] transition shadow-xs"
                 />
               </div>
@@ -289,7 +289,7 @@ export default function LoginPage() {
 
                 <button
                   type="button"
-                  onClick={() => alert("Silakan hubungi admin Farmora via email: support@farmora.id")}
+                  onClick={() => alert("Silakan hubungi admin EverGreen via email: support@evergreen.id")}
                   className="text-[11px] font-bold text-[#326154] hover:text-[#1e4138] hover:underline transition cursor-pointer"
                 >
                   Lupa kata sandi?
@@ -359,7 +359,7 @@ export default function LoginPage() {
 
           {/* Register Link */}
           <p className="text-center text-xs text-[#5e887d] font-medium mt-4">
-            Belum memiliki akun Farmora?{" "}
+            Belum memiliki akun EverGreen?{" "}
             <Link
               href="/register"
               className="font-extrabold text-[#275349] hover:underline underline-offset-2"

@@ -18,7 +18,7 @@ export function MobileFrame({
       {/* Top Banner Bar - ONLY visible on Desktop */}
       <div className="hidden md:flex items-center gap-3 mb-3 px-4 py-1.5 rounded-full bg-slate-900/90 border border-slate-800 text-slate-300 text-xs shadow-lg backdrop-blur select-none">
         <span className="flex h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-        <span className="font-semibold text-emerald-400">FARMORA Mobile Preview</span>
+        <span className="font-semibold text-emerald-400">EVERGREEN Mobile Preview</span>
         <span className="text-slate-600">•</span>
         <span className="text-slate-400">390 × 844 px</span>
         <span className="px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-300 text-[10px] font-semibold tracking-wide uppercase">

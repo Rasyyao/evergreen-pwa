@@ -48,7 +48,7 @@ export default function RegisterPage() {
       return;
     }
     if (!termsAgreed) {
-      setError("Anda harus menyetujui ketentuan layanan FARMORA.");
+      setError("Anda harus menyetujui ketentuan layanan EVERGREEN.");
       return;
     }
 
@@ -141,7 +141,7 @@ export default function RegisterPage() {
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="petani@farmora.id"
+              placeholder="petani@evergreen.id"
               className="w-full rounded-2xl bg-[#e3ece8] py-2.5 px-4 text-sm text-[#275349] font-medium placeholder-[#8ea49d] focus:outline-none focus:ring-2 focus:ring-[#43786b]/40 transition"
             />
           </div>
@@ -221,7 +221,7 @@ export default function RegisterPage() {
               />
               <span>
                 Saya menyetujui <strong className="text-[#275349]">Syarat &amp; Ketentuan</strong> serta{" "}
-                <strong className="text-[#275349]">Kebijakan Privasi</strong> aplikasi FARMORA.
+                <strong className="text-[#275349]">Kebijakan Privasi</strong> aplikasi EVERGREEN.
               </span>
             </label>
           </div>

@@ -30,7 +30,7 @@ interface AuthContextType {
 
 const DEFAULT_USER: User = {
   name: "Rasya Pratama",
-  email: "rasya@farmora.id",
+  email: "rasya@evergreen.id",
   phone: "+62 812-3456-7890",
   landSize: "2.4 ha",
   commodity: "Padi & Palawija",
@@ -45,13 +45,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     try {
-      const stored = localStorage.getItem("farmora_user");
+      const stored = localStorage.getItem("evergreen_user");
       if (stored) {
         setUser(JSON.parse(stored));
       } else {
         // Initialize with default demo user for seamless evaluation
         setUser(DEFAULT_USER);
-        localStorage.setItem("farmora_user", JSON.stringify(DEFAULT_USER));
+        localStorage.setItem("evergreen_user", JSON.stringify(DEFAULT_USER));
       }
     } catch {
       setUser(DEFAULT_USER);
@@ -65,14 +65,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Simulate brief network latency for realistic mobile feel
     await new Promise((resolve) => setTimeout(resolve, 600));
     const newUser: User = {
-      name: email.split("@")[0] || "Petani Farmora",
+      name: email.split("@")[0] || "Petani EverGreen",
       email: email,
       phone: "+62 812-3456-7890",
       landSize: "2.4 ha",
       commodity: "Padi",
     };
     setUser(newUser);
-    localStorage.setItem("farmora_user", JSON.stringify(newUser));
+    localStorage.setItem("evergreen_user", JSON.stringify(newUser));
     setIsLoading(false);
     return true;
   };
@@ -93,14 +93,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       commodity: data.commodity || "Padi Sawah",
     };
     setUser(newUser);
-    localStorage.setItem("farmora_user", JSON.stringify(newUser));
+    localStorage.setItem("evergreen_user", JSON.stringify(newUser));
     setIsLoading(false);
     return true;
   };
 
   const loginAsDemo = () => {
     setUser(DEFAULT_USER);
-    localStorage.setItem("farmora_user", JSON.stringify(DEFAULT_USER));
+    localStorage.setItem("evergreen_user", JSON.stringify(DEFAULT_USER));
     router.push("/");
   };
 
@@ -108,14 +108,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUser((prev) => {
       if (!prev) return prev;
       const next = { ...prev, ...data };
-      localStorage.setItem("farmora_user", JSON.stringify(next));
+      localStorage.setItem("evergreen_user", JSON.stringify(next));
       return next;
     });
   };
 
   const logout = () => {
     setUser(null);
-    localStorage.removeItem("farmora_user");
+    localStorage.removeItem("evergreen_user");
     router.push("/login");
   };
 

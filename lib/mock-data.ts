@@ -67,7 +67,7 @@ export type ActivityLog = {
 
 const homeData: HomeData = {
   device: {
-    id: "FARMORA-01",
+    id: "EVERGREEN-01",
     status: "connected",
     battery: 85,
   },
