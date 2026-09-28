@@ -2,8 +2,8 @@ import type { MetadataRoute } from "next";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "EVERGREEN — Smart Farming Assistant",
-    short_name: "EVERGREEN",
+    name: "AGRIVA — Smart Farming Assistant",
+    short_name: "AGRIVA",
     description:
       "Dasbor pemantauan lahan, deteksi hama/gulma, dan riwayat aktivitas penyemprotan.",
     start_url: "/",

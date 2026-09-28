@@ -1,4 +1,4 @@
-const CACHE_NAME = "evergreen-shell-v1";
+const CACHE_NAME = "agriva-shell-v1";
 const APP_SHELL = ["/", "/manifest.webmanifest", "/icons/icon.svg"];
 
 self.addEventListener("install", (event) => {

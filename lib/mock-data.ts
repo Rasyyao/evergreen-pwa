@@ -68,9 +68,9 @@ export type ActivityLog = {
 };
 
 const deviceList: Device[] = [
-  { id: "EVERGREEN-01", status: "connected",    battery: 85, lahanName: "Lahan 1", signalStrength: 92 },
-  { id: "EVERGREEN-02", status: "connected",    battery: 61, lahanName: "Lahan 2", signalStrength: 78 },
-  { id: "EVERGREEN-03", status: "disconnected", battery: 14, lahanName: "Lahan 3", signalStrength: 0  },
+  { id: "AGRIVA-01", status: "connected",    battery: 85, lahanName: "Lahan 1", signalStrength: 92 },
+  { id: "AGRIVA-02", status: "connected",    battery: 61, lahanName: "Lahan 2", signalStrength: 78 },
+  { id: "AGRIVA-03", status: "disconnected", battery: 14, lahanName: "Lahan 3", signalStrength: 0  },
 ];
 
 const homeData: HomeData = {

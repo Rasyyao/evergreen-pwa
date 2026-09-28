@@ -3,7 +3,7 @@
 import React, { createContext, useContext, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { getRandomAnalisisId } from "@/lib/mock-data";
-import { EverGreenLogoIcon, GalleryIcon } from "./icons";
+import { AgrivaLogoIcon, GalleryIcon } from "./icons";
 
 interface CameraScannerContextValue {
   isOpen: boolean;
@@ -289,7 +289,7 @@ export function CameraScannerProvider({ children }: { children: React.ReactNode 
                   <span className="absolute inset-0 rounded-full border-4 border-emerald-500/20" />
                   <span className="absolute inset-0 rounded-full border-4 border-emerald-400 border-t-transparent animate-spin" />
                   <span className="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-500/25 text-emerald-400">
-                    <EverGreenLogoIcon className="h-5 w-5 text-emerald-400" />
+                    <AgrivaLogoIcon className="h-5 w-5 text-emerald-400" />
                   </span>
                 </div>
                 <h3 className="text-lg font-bold text-white mb-1">Menganalisis Spesies</h3>

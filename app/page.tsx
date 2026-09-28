@@ -6,7 +6,7 @@ import { DeviceCard } from "@/components/home/DeviceCard";
 import { LandConditionGrid } from "@/components/home/LandConditionGrid";
 import { ActivityHistoryList } from "@/components/home/ActivityHistoryList";
 import { useAuth } from "@/context/AuthContext";
-import { EverGreenLogoIcon, MapIcon } from "@/components/icons";
+import { AgrivaLogoIcon, MapIcon } from "@/components/icons";
 
 export default function HomePage() {
   const { device, landCondition, activityHistory } = getHomeData();
@@ -23,7 +23,7 @@ export default function HomePage() {
         </div>
         <div className="flex items-center gap-2">
           <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-600 to-teal-700 text-white shadow-md shadow-emerald-700/30">
-            <EverGreenLogoIcon className="h-5 w-5" />
+            <AgrivaLogoIcon className="h-5 w-5" />
           </div>
         </div>
       </header>

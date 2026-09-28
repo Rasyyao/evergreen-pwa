@@ -16,13 +16,13 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "EVERGREEN — Smart Farming Assistant",
+  title: "AGRIVA — Smart Farming Assistant",
   description:
     "Dasbor pemantauan lahan, deteksi hama/gulma, dan riwayat aktivitas penyemprotan.",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
-    title: "EVERGREEN",
+    title: "AGRIVA",
   },
 };
 

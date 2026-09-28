@@ -21,7 +21,7 @@ export type StoredDetection = {
   timestamp: string;
 };
 
-export const DETECTION_STORAGE_KEY = "evergreen:lastDetection";
+export const DETECTION_STORAGE_KEY = "agriva:lastDetection";
 
 export async function detectImage(image: Blob): Promise<DetectionResult> {
   const formData = new FormData();
