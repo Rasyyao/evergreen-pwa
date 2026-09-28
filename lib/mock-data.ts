@@ -7,6 +7,8 @@ export type Device = {
   id: string;
   status: DeviceStatus;
   battery: number;
+  lahanName?: string;
+  signalStrength?: number; // 0-100
 };
 
 export type LandCondition = {
@@ -65,12 +67,14 @@ export type ActivityLog = {
   entries: ActivityLogEntry[];
 };
 
+const deviceList: Device[] = [
+  { id: "EVERGREEN-01", status: "connected",    battery: 85, lahanName: "Lahan 1", signalStrength: 92 },
+  { id: "EVERGREEN-02", status: "connected",    battery: 61, lahanName: "Lahan 2", signalStrength: 78 },
+  { id: "EVERGREEN-03", status: "disconnected", battery: 14, lahanName: "Lahan 3", signalStrength: 0  },
+];
+
 const homeData: HomeData = {
-  device: {
-    id: "EVERGREEN-01",
-    status: "connected",
-    battery: 85,
-  },
+  device: deviceList[0],
   landCondition: {
     moisturePct: 32,
     soilTempC: 27,
@@ -84,6 +88,10 @@ const homeData: HomeData = {
     { time: "07:30", action: "Monitoring Lahan", detail: "Selesai" },
   ],
 };
+
+export function getDeviceList(): Device[] {
+  return deviceList;
+}
 
 const analisisList: AnalisisEntry[] = [
   {

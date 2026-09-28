@@ -18,7 +18,7 @@ export default function HomePage() {
         <div>
           <p className="text-xs font-medium text-emerald-700">Selamat bertani,</p>
           <h1 className="text-2xl font-bold tracking-tight text-zinc-900">
-            {user?.name || "Rasya Pratama"}
+            {user?.name || "Rasya "}
           </h1>
         </div>
         <div className="flex items-center gap-2">
@@ -30,7 +30,7 @@ export default function HomePage() {
 
       <DeviceCard device={device} />
 
-      <Link
+      {/* <Link
         href="/lahan"
         className="group flex items-center justify-between rounded-3xl border border-zinc-200/90 bg-white p-4 shadow-xs transition hover:shadow-sm active:scale-[0.98]"
       >
@@ -46,7 +46,7 @@ export default function HomePage() {
         <span className="text-[11px] font-semibold text-emerald-700 group-hover:translate-x-0.5 transition-transform">
           Buka &rarr;
         </span>
-      </Link>
+      </Link> */}
 
       <section>
         <div className="mb-2.5 flex items-center justify-between">

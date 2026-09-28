@@ -2,13 +2,13 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { AktivitasIcon, AnalisisIcon, CameraIcon, HomeIcon, ProfileIcon } from "./icons";
+import { MapIcon, AnalisisIcon, CameraIcon, HomeIcon, ProfileIcon } from "./icons";
 import { useCameraScanner } from "./CameraScanner";
 
 const NAV_ITEMS = [
   { href: "/", label: "Home", icon: HomeIcon },
   { href: "/analisis", label: "Analisis", icon: AnalisisIcon },
-  { href: "/aktivitas", label: "Aktivitas", icon: AktivitasIcon },
+  { href: "/lahan", label: "Peta Lahan", icon: MapIcon },
   { href: "/profile", label: "Profile", icon: ProfileIcon },
 ] as const;
 

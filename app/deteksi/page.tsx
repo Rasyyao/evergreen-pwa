@@ -3,6 +3,7 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { EverGreenLogoIcon, GalleryIcon } from "@/components/icons";
+import { getDeviceList } from "@/lib/mock-data";
 import {
   DETECTION_STORAGE_KEY,
   blobToDataUrl,
@@ -23,6 +24,8 @@ export default function DeteksiPage() {
   const [processingError, setProcessingError] = useState<string | null>(null);
   const [cameraStarted, setCameraStarted] = useState(false);
   const [isSwitching, setIsSwitching] = useState(false);
+  const [showDeviceSheet, setShowDeviceSheet] = useState(false);
+  const [devices, setDevices] = useState(() => getDeviceList());
 
   // Debug state for mobile troubleshooting
   const [debugInfo, setDebugInfo] = useState<{
@@ -298,7 +301,7 @@ export default function DeteksiPage() {
         <div className="absolute inset-0 z-50 bg-white animate-shutter-flash pointer-events-none" />
       )}
 
-      {/* Top Camera Controls Bar */}
+        {/* Top Camera Controls Bar */}
       <div className="relative z-30 flex items-center justify-between px-5 pt-4 pb-3 bg-gradient-to-b from-black/80 to-transparent">
         {/* Close Button (X) */}
         <button
@@ -318,23 +321,33 @@ export default function DeteksiPage() {
           <span>AI DETEKSI AKTIF</span>
         </div>
 
-        {/* Flash Mode Toggle */}
-        <button
-          type="button"
-          onClick={() =>
-            setFlashMode((prev) => (prev === "auto" ? "on" : prev === "on" ? "off" : "auto"))
-          }
-          className="flex h-10 w-10 items-center justify-center rounded-full bg-black/40 text-white backdrop-blur transition active:scale-90 text-xs font-bold cursor-pointer"
-          aria-label="Mode Flash"
-        >
-          {flashMode === "auto" ? (
-            <span className="text-amber-400">⚡A</span>
-          ) : flashMode === "on" ? (
-            <span className="text-amber-300">⚡ON</span>
-          ) : (
-            <span className="text-zinc-400">⚡OFF</span>
-          )}
-        </button>
+        {/* Right side: Flash + Connect Device */}
+        <div className="flex items-center gap-2">
+
+          <button
+            type="button"
+            onClick={() => setShowDeviceSheet(true)}
+            className="flex h-10 w-10 items-center justify-center rounded-full bg-black/40 backdrop-blur transition active:scale-90 cursor-pointer"
+            aria-label="Hubungkan perangkat"
+          >
+            {/* Bluetooth-style icon */}
+            <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M8 6l8 6-8 6V6zM16 6v12"
+              />
+              <circle
+                cx="19"
+                cy="6"
+                r="2"
+                fill={devices.some((d) => d.status === "connected") ? "#34d399" : "#71717a"}
+                stroke="none"
+              />
+            </svg>
+          </button>
+        </div>
       </div>
 
       {/* Camera Viewfinder Area */}
@@ -546,6 +559,108 @@ export default function DeteksiPage() {
           </button>
         </div>
       </div>
+
+      {/* ── Connect Device Bottom Sheet ── */}
+      {showDeviceSheet && (
+        <>
+          {/* Backdrop */}
+          <div
+            className="absolute inset-0 z-40 bg-black/60 backdrop-blur-sm"
+            onClick={() => setShowDeviceSheet(false)}
+          />
+          {/* Sheet */}
+          <div className="absolute bottom-0 left-0 right-0 z-50 rounded-t-3xl bg-zinc-900 border-t border-zinc-700/60 px-5 pt-4 pb-10 animate-in slide-in-from-bottom duration-300">
+            {/* Handle */}
+            <div className="mx-auto mb-4 h-1 w-10 rounded-full bg-zinc-600" />
+
+            {/* Header */}
+            <div className="flex items-center justify-between mb-5">
+              <div>
+                <h2 className="text-sm font-bold text-white">Hubungkan Perangkat</h2>
+                <p className="text-[11px] text-zinc-400 mt-0.5">
+                  {devices.filter((d) => d.status === "connected").length}/{devices.length} sensor terhubung
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowDeviceSheet(false)}
+                className="flex h-8 w-8 items-center justify-center rounded-full bg-zinc-800 text-zinc-400 hover:text-white transition active:scale-90 cursor-pointer"
+              >
+                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            {/* Device List */}
+            <div className="flex flex-col gap-2.5">
+              {devices.map((device) => {
+                const isOn = device.status === "connected";
+                return (
+                  <div
+                    key={device.id}
+                    className="flex items-center justify-between rounded-2xl bg-zinc-800/70 border border-zinc-700/50 px-4 py-3"
+                  >
+                    {/* Left: icon + info */}
+                    <div className="flex items-center gap-3">
+                      <div
+                        className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl transition ${
+                          isOn
+                            ? "bg-emerald-500/15 border border-emerald-500/30"
+                            : "bg-zinc-700 border border-zinc-600"
+                        }`}
+                      >
+                        {/* IoT device icon */}
+                        <svg className={`h-5 w-5 ${isOn ? "text-emerald-400" : "text-zinc-500"}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <rect x="2" y="7" width="20" height="14" rx="2" strokeWidth={1.8} />
+                          <path strokeLinecap="round" strokeWidth={1.8} d="M8 7V5a4 4 0 018 0v2" />
+                          <circle cx="12" cy="14" r="2" strokeWidth={1.8} />
+                        </svg>
+                      </div>
+                      <div>
+                        <p className="text-xs font-bold text-white">{device.id}</p>
+                        <p className="text-[10px] text-zinc-400 mt-0.5">
+                          {device.lahanName ?? "–"} · Baterai {device.battery}%
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Right: status + button */}
+                    <div className="flex items-center gap-2">
+                      <span
+                        className={`text-[10px] font-semibold ${
+                          isOn ? "text-emerald-400" : "text-zinc-500"
+                        }`}
+                      >
+                        {isOn ? "Terhubung" : "Offline"}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setDevices((prev) =>
+                            prev.map((d) =>
+                              d.id === device.id
+                                ? { ...d, status: d.status === "connected" ? "disconnected" : "connected" }
+                                : d
+                            )
+                          )
+                        }
+                        className={`px-3 py-1.5 rounded-full text-[11px] font-bold transition active:scale-95 cursor-pointer ${
+                          isOn
+                            ? "bg-zinc-700 text-zinc-300 hover:bg-zinc-600"
+                            : "bg-emerald-600 text-white hover:bg-emerald-500 shadow-md shadow-emerald-600/30"
+                        }`}
+                      >
+                        {isOn ? "Putus" : "Sambung"}
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </>
+      )}
     </div>
   );
 }
