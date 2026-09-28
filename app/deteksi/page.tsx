@@ -511,6 +511,25 @@ export default function DeteksiPage() {
 
       {/* Camera App Bottom Controls */}
       <div className="relative z-30 flex flex-col items-center justify-end px-6 pt-4 pb-10 bg-gradient-to-t from-black via-black/90 to-transparent">
+
+        {/* ── Analisis AI Button (above shutter row) ── */}
+        <button
+          type="button"
+          onClick={() => galleryInputRef.current?.click()}
+          className="mb-5 flex items-center gap-2 rounded-full border border-emerald-500/40 bg-emerald-500/10 px-5 py-2.5 text-xs font-bold text-emerald-300 backdrop-blur transition active:scale-95 hover:bg-emerald-500/20 cursor-pointer shadow-lg shadow-emerald-500/10"
+          aria-label="Analisis foto dengan AI"
+        >
+          {/* Sparkles icon */}
+          <svg className="h-4 w-4 text-emerald-400 animate-pulse" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+              d="m12 3 1.91 5.09L19 10l-5.09 1.91L12 17l-1.91-5.09L5 10l5.09-1.91L12 3zM19 17l.95 2.05L22 20l-2.05.95L19 23l-.95-2.05L16 20l2.05-.95L19 17z" />
+          </svg>
+          Analisis dengan AI
+          <span className="rounded-full bg-emerald-500/20 px-1.5 py-0.5 text-[9px] font-black text-emerald-400 tracking-wider">
+            PILIH FOTO
+          </span>
+        </button>
+
         {/* Main Action Buttons Bar */}
         <div className="w-full flex items-center justify-between px-4 max-w-[340px]">
           {/* Gallery Button */}

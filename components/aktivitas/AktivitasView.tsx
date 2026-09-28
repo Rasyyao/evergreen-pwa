@@ -35,7 +35,7 @@ export function AktivitasView() {
       </div>
 
       {/* Summary Highlight Card */}
-      <section className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-emerald-600 to-teal-700 p-5 text-white shadow-md shadow-emerald-700/20">
+      <section className="relative overflow-hidden rounded-3xl p-5 text-white shadow-md shadow-emerald-900/30" style={{ background: "linear-gradient(145deg, #065f46 0%, #047857 50%, #0f766e 100%)" }}>
         <p className="text-[11px] font-medium text-emerald-100 uppercase tracking-wider">
           Total Area Tercover ({period})
         </p>

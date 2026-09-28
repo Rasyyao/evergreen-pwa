@@ -195,6 +195,22 @@ const activityLogs: Record<ActivityPeriod, ActivityLog> = {
 
 export type LahanStatus = "aman" | "waspada" | "bahaya";
 
+export type ZonePrediction = {
+  id: string;
+  zoneStatus: "waspada" | "bahaya";
+  /** Detected pest/weed species from robot scan */
+  threat: string;
+  /** Detection confidence 0–1 */
+  confidence: number;
+  /** Recommended prevention/treatment */
+  action: string;
+  actionType: "Pestisida" | "Herbisida" | "Monitoring";
+  urgency: "Segera" | "Dalam 3 Hari" | "Dalam 1 Minggu";
+  /** Number of grid cells affected */
+  affectedCells: number;
+  detectedAt: string;
+};
+
 /** [latitude, longitude] */
 export type LatLng = [number, number];
 
@@ -216,6 +232,8 @@ export type Lahan = {
    * boundary, in row-major order. See `lib/lahan-grid.ts` for how cells are derived.
    */
   zonePattern: LahanStatus[];
+  /** AI predictions from robot mapping scan for non-aman zones */
+  zonePredictions: ZonePrediction[];
 };
 
 export const lahanStatusStyles: Record<
@@ -261,6 +279,30 @@ const lahanList: Lahan[] = [
       [-6.30340, 107.33690],
     ],
     zonePattern: ["aman", "aman", "waspada", "aman", "bahaya", "bahaya", "aman", "waspada", "bahaya", "aman", "waspada", "bahaya"],
+    zonePredictions: [
+      {
+        id: "pred-lhn001-1",
+        zoneStatus: "bahaya",
+        threat: "Wereng Coklat (Nilaparvata lugens)",
+        confidence: 0.91,
+        action: "Semprot Pestisida Buprofezin 25 WP dosis 1–1.5 L/ha",
+        actionType: "Pestisida",
+        urgency: "Segera",
+        affectedCells: 4,
+        detectedAt: "Hari ini, 06:42",
+      },
+      {
+        id: "pred-lhn001-2",
+        zoneStatus: "waspada",
+        threat: "Rumput Teki (Cyperus rotundus)",
+        confidence: 0.78,
+        action: "Aplikasi Herbisida Halosulfuron 75 WG dosis 60 g/ha",
+        actionType: "Herbisida",
+        urgency: "Dalam 3 Hari",
+        affectedCells: 3,
+        detectedAt: "Hari ini, 06:44",
+      },
+    ],
   },
   {
     id: "lhn002",
@@ -279,6 +321,19 @@ const lahanList: Lahan[] = [
       [-6.33830, 108.31955],
     ],
     zonePattern: ["aman", "aman", "aman", "waspada", "aman", "aman", "aman", "aman", "waspada", "aman"],
+    zonePredictions: [
+      {
+        id: "pred-lhn002-1",
+        zoneStatus: "waspada",
+        threat: "Ulat Grayak (Spodoptera frugiperda)",
+        confidence: 0.74,
+        action: "Monitoring intensif dan pasang perangkap feromon",
+        actionType: "Monitoring",
+        urgency: "Dalam 1 Minggu",
+        affectedCells: 2,
+        detectedAt: "Kemarin, 14:20",
+      },
+    ],
   },
   {
     id: "lhn003",
@@ -297,6 +352,30 @@ const lahanList: Lahan[] = [
       [-6.57275, 107.75620],
     ],
     zonePattern: ["waspada", "bahaya", "bahaya", "waspada", "waspada", "aman", "bahaya", "waspada", "bahaya", "waspada"],
+    zonePredictions: [
+      {
+        id: "pred-lhn003-1",
+        zoneStatus: "bahaya",
+        threat: "Thrips (Thrips parvispinus)",
+        confidence: 0.88,
+        action: "Semprot Pestisida Spinosad 48 SC dosis 0.5–1 ml/L air",
+        actionType: "Pestisida",
+        urgency: "Segera",
+        affectedCells: 4,
+        detectedAt: "1 jam lalu",
+      },
+      {
+        id: "pred-lhn003-2",
+        zoneStatus: "waspada",
+        threat: "Bayam Duri (Amaranthus spinosus)",
+        confidence: 0.82,
+        action: "Penyiangan manual atau Herbisida Glifosat 486 SL dosis 1–2 L/ha",
+        actionType: "Herbisida",
+        urgency: "Dalam 3 Hari",
+        affectedCells: 4,
+        detectedAt: "1 jam lalu",
+      },
+    ],
   },
 ];
 
@@ -304,6 +383,10 @@ export function getLahanOverallStatus(lahan: Lahan): LahanStatus {
   if (lahan.zonePattern.includes("bahaya")) return "bahaya";
   if (lahan.zonePattern.includes("waspada")) return "waspada";
   return "aman";
+}
+
+export function getZonePredictions(lahanId: string): ZonePrediction[] {
+  return lahanList.find((l) => l.id === lahanId)?.zonePredictions ?? [];
 }
 
 export function getLahanList(): Lahan[] {

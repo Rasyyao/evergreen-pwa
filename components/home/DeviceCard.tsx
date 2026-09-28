@@ -16,7 +16,7 @@ export function DeviceCard({ device: initialDevice }: { device: Device }) {
   };
 
   return (
-    <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-emerald-600 via-emerald-700 to-teal-800 p-5 text-white shadow-md shadow-emerald-700/25">
+    <div className="relative overflow-hidden rounded-3xl p-5 text-white shadow-md shadow-emerald-900/30" style={{ background: "linear-gradient(145deg, #065f46 0%, #047857 50%, #0f766e 100%)" }}>
       {/* Decorative leaf/mesh watermark */}
       <div className="absolute -right-6 -bottom-6 h-28 w-28 rounded-full bg-white/10 blur-xl pointer-events-none" />
 
