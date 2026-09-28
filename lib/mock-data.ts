@@ -185,6 +185,127 @@ const activityLogs: Record<ActivityPeriod, ActivityLog> = {
   },
 };
 
+export type LahanStatus = "aman" | "waspada" | "bahaya";
+
+/** [latitude, longitude] */
+export type LatLng = [number, number];
+
+export type Lahan = {
+  id: string;
+  name: string;
+  location: string;
+  areaHa: number;
+  komoditas: string;
+  deviceStatus: DeviceStatus;
+  lastUpdated: string;
+  condition: LandCondition;
+  /** Real-world GPS center used to position the Leaflet map. */
+  center: LatLng;
+  /** Ordered boundary vertices tracing the perimeter of the plot (real coordinates). */
+  boundary: LatLng[];
+  /**
+   * Status cycle applied (round-robin) to each grid cell that falls inside the
+   * boundary, in row-major order. See `lib/lahan-grid.ts` for how cells are derived.
+   */
+  zonePattern: LahanStatus[];
+};
+
+export const lahanStatusStyles: Record<
+  LahanStatus,
+  { label: string; dot: string; badge: string; hex: string }
+> = {
+  aman: {
+    label: "Aman",
+    dot: "bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.7)]",
+    badge: "bg-emerald-50 text-emerald-700 border border-emerald-200/80",
+    hex: "#10b981",
+  },
+  waspada: {
+    label: "Waspada",
+    dot: "bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.7)]",
+    badge: "bg-amber-50 text-amber-700 border border-amber-200/80",
+    hex: "#f59e0b",
+  },
+  bahaya: {
+    label: "Bahaya",
+    dot: "bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.7)]",
+    badge: "bg-rose-50 text-rose-700 border border-rose-200/80",
+    hex: "#f43f5e",
+  },
+};
+
+// Real coordinates over Indonesian rice-paddy regions (Karawang, Indramayu, Subang).
+const lahanList: Lahan[] = [
+  {
+    id: "lhn001",
+    name: "Lahan 1",
+    location: "Karawang, Jawa Barat",
+    areaHa: 2.4,
+    komoditas: "Padi",
+    deviceStatus: "connected",
+    lastUpdated: "Baru saja",
+    condition: { moisturePct: 32, soilTempC: 27, ph: 6.4, lightLevel: "Tinggi" },
+    center: [-6.30225, 107.33805],
+    boundary: [
+      [-6.30110, 107.33690],
+      [-6.30110, 107.33920],
+      [-6.30340, 107.33920],
+      [-6.30340, 107.33690],
+    ],
+    zonePattern: ["aman", "aman", "waspada", "aman", "bahaya", "bahaya", "aman", "waspada", "bahaya", "aman", "waspada", "bahaya"],
+  },
+  {
+    id: "lhn002",
+    name: "Lahan 2",
+    location: "Indramayu, Jawa Barat",
+    areaHa: 1.8,
+    komoditas: "Jagung",
+    deviceStatus: "connected",
+    lastUpdated: "2 menit lalu",
+    condition: { moisturePct: 45, soilTempC: 29, ph: 6.1, lightLevel: "Sedang" },
+    center: [-6.33730, 108.32060],
+    boundary: [
+      [-6.33630, 108.31955],
+      [-6.33630, 108.32165],
+      [-6.33830, 108.32165],
+      [-6.33830, 108.31955],
+    ],
+    zonePattern: ["aman", "aman", "aman", "waspada", "aman", "aman", "aman", "aman", "waspada", "aman"],
+  },
+  {
+    id: "lhn003",
+    name: "Lahan 3",
+    location: "Subang, Jawa Barat",
+    areaHa: 3.1,
+    komoditas: "Sayuran",
+    deviceStatus: "disconnected",
+    lastUpdated: "1 jam lalu",
+    condition: { moisturePct: 21, soilTempC: 31, ph: 5.6, lightLevel: "Tinggi" },
+    center: [-6.57150, 107.75735],
+    boundary: [
+      [-6.57025, 107.75620],
+      [-6.57025, 107.75850],
+      [-6.57275, 107.75850],
+      [-6.57275, 107.75620],
+    ],
+    zonePattern: ["waspada", "bahaya", "bahaya", "waspada", "waspada", "aman", "bahaya", "waspada", "bahaya", "waspada"],
+  },
+];
+
+export function getLahanOverallStatus(lahan: Lahan): LahanStatus {
+  if (lahan.zonePattern.includes("bahaya")) return "bahaya";
+  if (lahan.zonePattern.includes("waspada")) return "waspada";
+  return "aman";
+}
+
+export function getLahanList(): Lahan[] {
+  return lahanList;
+}
+
+export function getLahanById(id: string): Lahan | undefined {
+  return lahanList.find((lahan) => lahan.id === id);
+}
+
 export function getHomeData(): HomeData {
   return homeData;
 }

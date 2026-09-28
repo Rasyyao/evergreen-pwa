@@ -1,11 +1,12 @@
 "use client";
 
+import Link from "next/link";
 import { getHomeData } from "@/lib/mock-data";
 import { DeviceCard } from "@/components/home/DeviceCard";
 import { LandConditionGrid } from "@/components/home/LandConditionGrid";
 import { ActivityHistoryList } from "@/components/home/ActivityHistoryList";
 import { useAuth } from "@/context/AuthContext";
-import { EverGreenLogoIcon } from "@/components/icons";
+import { EverGreenLogoIcon, MapIcon } from "@/components/icons";
 
 export default function HomePage() {
   const { device, landCondition, activityHistory } = getHomeData();
@@ -28,6 +29,24 @@ export default function HomePage() {
       </header>
 
       <DeviceCard device={device} />
+
+      <Link
+        href="/lahan"
+        className="group flex items-center justify-between rounded-3xl border border-zinc-200/90 bg-white p-4 shadow-xs transition hover:shadow-sm active:scale-[0.98]"
+      >
+        <div className="flex items-center gap-3">
+          <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-700 border border-emerald-100">
+            <MapIcon className="h-5 w-5" />
+          </span>
+          <div>
+            <p className="text-sm font-bold text-zinc-900">Peta Lahan</p>
+            <p className="text-[11px] text-zinc-500">Lihat mapping &amp; kondisi tiap lahan</p>
+          </div>
+        </div>
+        <span className="text-[11px] font-semibold text-emerald-700 group-hover:translate-x-0.5 transition-transform">
+          Buka &rarr;
+        </span>
+      </Link>
 
       <section>
         <div className="mb-2.5 flex items-center justify-between">
